@@ -1,5 +1,6 @@
 import { extendType, intArg, nonNull, objectType, stringArg } from "nexus";
 import { NexusGenObjects } from "../nexus";
+import { Context } from "../context";
 
 export const Link = objectType({
     name: "Link",
@@ -53,6 +54,13 @@ export const LinkQuuery = extendType({
     },
 })
 
+const getUserId = (context: Context) => {
+    const {userId} = context;
+    if (!userId) {
+        throw new Error("Not authenticated");
+    }
+    return userId;
+};
 
 export const LinkMutation = extendType({
     type: "Mutation",
@@ -64,10 +72,13 @@ export const LinkMutation = extendType({
                 url: nonNull(stringArg()),
             },
             resolve: (parent, args, context) => {
+                const userId = getUserId(context);
+
                 return context.client.link.create({
                     data: {
                         description: args.description,
                         url: args.url,
+                        postedBy: { connect: { id: userId } },
                     },
                 });
             },
@@ -81,6 +92,8 @@ export const LinkMutation = extendType({
                 url: stringArg(),
             },
             resolve: async (parent, args, context) => {
+                const userId = getUserId(context);
+
                 const link = await context.client.link.findUnique({
                     where: { id: args.id },
                 });
@@ -106,6 +119,8 @@ export const LinkMutation = extendType({
                 id: nonNull(intArg()),
             },
             resolve: async (parent, args, context) => {
+                const userId = getUserId(context);
+
                 return context.client.link.delete({
                     where: { id: args.id },
                 });;

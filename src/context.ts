@@ -10,6 +10,7 @@ export interface Context {
 }
 
 export function context({req}: {req: Request}): Context {
+    console.log(req?.headers?.authorization);
     const token = decodeAuthHeader(req?.headers?.authorization || "")
     return {
         client,
